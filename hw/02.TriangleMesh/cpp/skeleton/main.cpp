@@ -227,6 +227,87 @@ void update_buffer_objects()
   assert(g_position_size == g_color_size);
   g_num_position = cube::triangle_soup::num_position;
 
+  if (g_mesh_type == kTriangleSoup)
+  {
+    if (g_mesh_model == kCube)
+    {
+      g_position_size = sizeof(cube::triangle_soup::position);
+      g_position_data = cube::triangle_soup::position;
+
+      g_color_size = sizeof(cube::triangle_soup::color);
+      g_color_data = cube::triangle_soup::color;
+
+      assert(g_position_size == g_color_size);
+      g_num_position = cube::triangle_soup::num_position;
+    }
+    else if (g_mesh_model == kAvocado)
+    {
+      g_position_size = sizeof(avocado::triangle_soup::position);
+      g_position_data = avocado::triangle_soup::position;
+
+      g_color_size = sizeof(avocado::triangle_soup::color);
+      g_color_data = avocado::triangle_soup::color;
+
+      assert(g_position_size == g_color_size);
+      g_num_position = avocado::triangle_soup::num_position;
+    }
+    else // g_mesh_model == kDonut
+    {
+      g_position_size = sizeof(donut::triangle_soup::position);
+      g_position_data = donut::triangle_soup::position;
+
+      g_color_size = sizeof(donut::triangle_soup::color);
+      g_color_data = donut::triangle_soup::color;
+
+      assert(g_position_size == g_color_size);
+      g_num_position = donut::triangle_soup::num_position;
+    }
+  }
+  else // g_mesh_type == KVlistTriangles
+  {
+    if (g_mesh_model == kCube)
+    {
+      g_position_size = sizeof(cube::vlist_triangles::position);
+      g_position_data = cube::vlist_triangles::position;
+
+      g_color_size = sizeof(cube::vlist_triangles::color);
+      g_color_data = cube::vlist_triangles::color;
+
+      g_index_size = sizeof(cube::vlist_triangles::index);
+      g_index_data = cube::vlist_triangles::index;
+
+      assert(g_position_size == g_color_size);
+      g_num_index = cube::vlist_triangles::num_index;
+    }
+    else if (g_mesh_model == kAvocado)
+    {
+      g_position_size = sizeof(avocado::vlist_triangles::position);
+      g_position_data = avocado::vlist_triangles::position;
+
+      g_color_size = sizeof(avocado::vlist_triangles::color);
+      g_color_data = avocado::vlist_triangles::color;
+
+      g_index_size = sizeof(avocado::vlist_triangles::index);
+      g_index_data = avocado::vlist_triangles::index;
+
+      assert(g_position_size == g_color_size);
+      g_num_index = avocado::vlist_triangles::num_index;
+    }
+    else // g_mesh_model == kDonut
+    {
+      g_position_size = sizeof(donut::vlist_triangles::position);
+      g_position_data = donut::vlist_triangles::position;
+
+      g_color_size = sizeof(donut::vlist_triangles::color);
+      g_color_data = donut::vlist_triangles::color;
+
+      g_index_size = sizeof(donut::vlist_triangles::index);
+      g_index_data = donut::vlist_triangles::index;
+
+      assert(g_position_size == g_color_size);
+      g_num_index = donut::vlist_triangles::num_index;
+    }
+  }
 
   // VBO
   glBindBuffer(GL_ARRAY_BUFFER, position_buffer); 
@@ -235,9 +316,13 @@ void update_buffer_objects()
   glBindBuffer(GL_ARRAY_BUFFER, color_buffer);
   glBufferData(GL_ARRAY_BUFFER, g_color_size, g_color_data, GL_STATIC_DRAW);
 
-  // IBO
-  // ...
-
+  if (g_mesh_type == kVlistTriangles)
+  {
+    // IBO
+    // ...
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, g_index_size, g_index_data, GL_STATIC_DRAW);
+  }
 }
 
 
@@ -289,9 +374,16 @@ void render_object()
   // 현재 배열 버퍼에 있는 데이터를 버텍스 쉐이더 a_color에 해당하는 attribute와 연결
   glVertexAttribPointer(loc_a_color, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-
-  glDrawArrays(GL_TRIANGLES, 0, g_num_position);
-
+  // glDrawArrays(GL_TRIANGLES, 0, g_num_position);
+  if (g_mesh_type == kTriangleSoup) 
+  {
+    glDrawArrays(GL_TRIANGLES, 0, g_num_position);
+  }
+  else
+  {
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+    glDrawElements(GL_TRIANGLES, g_num_index, GL_UNSIGNED_INT, (void*)0);
+  }
 
   // 정점 attribute 배열 비활성화
   glDisableVertexAttribArray(loc_a_position);

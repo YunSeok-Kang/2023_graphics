@@ -37,8 +37,8 @@ GLfloat g_position[] = {
 // per-vertex RGB color (r, g, b)
 GLfloat g_color[] = {
   1.0f, 0.0f, 0.0f,             // 0th vertex color (red)
-  1.0f, 0.0f, 0.0f,             // 1st vertex color (red)
-  1.0f, 0.0f, 0.0f,             // 2nd vertex color (red)
+  0.0f, 1.0f, 0.0f,             // 1st vertex color (red)
+  0.0f, 0.0f, 1.0f,             // 2nd vertex color (red)
 };
 
 void init_buffer_objects();     // VBO init 함수: GPU의 VBO를 초기화하는 함수.
