@@ -31,13 +31,20 @@ void Camera::set_pose(const glm::quat& _q, const glm::vec3& _t)
 // TODO: fill up the following function properly 
 void Camera::get_pose(glm::quat& _q, glm::vec3& _t) const
 {
+  // this->set_pose(_q, _t);
+  glm::mat4 rotationMatrix = glm::mat4_cast(_q);
+  rotationMatrix[3][0] = -_t[0];
+  rotationMatrix[3][1] = -_t[1];
+  rotationMatrix[3][2] = _t[2];
 
+  _q = this->get_rotation();
+  _t = this->position();
 }
 
 // TODO: rewrite the following function properly 
 const glm::mat4 Camera::get_pose() const
 {
-  return  glm::mat4(1.0f);
+  return this->get_view_matrix();
 }
 
 // TODO: fill up the following function properly 
@@ -64,7 +71,6 @@ void Camera::set_pose(const glm::vec3& _pos, const glm::vec3& _at, const glm::ve
   up_dir_    = glm::cross(front_dir_, right_dir_);    // +y_cam direction
 
   position_  = _at;      // pos
-  this->set_position(_at);
 }
 
 // TODO: rewrite the following function properly 
