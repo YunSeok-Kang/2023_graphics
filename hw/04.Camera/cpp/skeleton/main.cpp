@@ -250,18 +250,18 @@ void compose_imgui_frame()
 void scroll_callback(GLFWwindow* window, double x, double y)
 {
   // TODO
-  // std::cout << x << ", " << y << std::endl;
   if (g_camera.mode() == Camera::kPerspective)
   {
     float currentFovy = g_camera.fovy();
-    currentFovy -= y;
+    currentFovy = glm::clamp<float>(currentFovy - y, 10.f, 160.f);
+    
     g_camera.set_fovy(currentFovy);
   }
   else
   {
     float currentOrthoScale = g_camera.ortho_scale();
-    currentOrthoScale -= y * 0.1f;
-
+    currentOrthoScale = glm::clamp<float>(currentOrthoScale - y * 0.1f, 0.1f, 10.f);
+    
     g_camera.set_ortho_scale(currentOrthoScale);
   }
 }
@@ -308,8 +308,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-  std::cout << "aspectRatio: " << (float) width / (float) height << std::endl;
-
   g_camera.set_aspect((float) width / (float) height);
   glViewport(0, 0, width, height);
 }
@@ -486,20 +484,10 @@ void init_scene()
   // view, projection transformation
   g_camera.set_mode(Camera::kPerspective);
   g_camera.set_fovy(60.0f);
-  // g_camera.set_position(glm::vec3(0.f, 0.f, 5.f));
-  // std::cout << "pos (" << g_camera.position().x << ", " << g_camera.position().y << ", " << g_camera.position().z << ")" << std::endl;
 
-  // temp (0, 0, 1) for starting position
   g_camera.set_pose(glm::vec3(0.f), glm::vec3(0.f, 0.f, 5.f), glm::vec3(0.f, 1.f, 0.f));
-  // g_camera.set_pose(glm::vec3(0.f), glm::vec3(0.f, 0.f, 5.f), glm::vec3(0.f, 1.f, 0.f));
   glm::quat _q = g_camera.get_rotation();
   g_camera.set_pose(_q, glm::vec3(0.f, 0.f, -5.f));
-
-  // glm::quat testq = glm::angleAxis(glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-  // g_camera.set_rotation(_q);
-
-  // glm::quat _q = g_camera.get_rotation();
-  // std::cout << "_q (" << _q.w << ", " <<_q.x << ", " << _q.y << ", " << _q.z << ")" << std::endl;
 
 }
 
