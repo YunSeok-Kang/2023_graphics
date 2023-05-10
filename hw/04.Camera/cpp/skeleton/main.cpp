@@ -176,8 +176,13 @@ void compose_imgui_frame()
     glm::quat   quat_cam;
     glm::vec3   vec_cam_pos;
 
+    vec_cam_pos = glm::vec3(0.f);
     ImGui::SliderFloat3("Tranlsate", glm::value_ptr(vec_cam_pos), -10.0f, 10.0f);
+
+    quat_cam = g_camera.get_rotation();
     ImGui::gizmo3D("Rotation", quat_cam);
+    g_camera.set_pose(quat_cam, vec_cam_pos);
+    
 
     ImGui::End();
   }
@@ -265,6 +270,22 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     g_vec_model_scale -= 0.1f;
 
   // TODO: update camera extrinsic parameter with key-inputs
+  // scale
+  if (key == GLFW_KEY_D && action == GLFW_PRESS)
+    g_camera.move_right(0.1f);
+  if (key == GLFW_KEY_A && action == GLFW_PRESS)
+    g_camera.move_left(0.1f);
+
+  if (key == GLFW_KEY_W && action == GLFW_PRESS)
+    g_camera.move_forward(0.1f);
+  if (key == GLFW_KEY_S && action == GLFW_PRESS)
+    g_camera.move_backward(0.1f);
+
+  // temp code for debugging
+  if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+    g_camera.move_up(0.1f);
+  if (key == GLFW_KEY_E && action == GLFW_PRESS)
+    g_camera.move_down(0.1f);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -446,6 +467,18 @@ void init_scene()
   g_camera.set_mode(Camera::kPerspective);
   g_camera.set_fovy(60.0f);
   g_camera.set_position(glm::vec3(0.f, 0.f, 5.f));
+  // std::cout << "pos (" << g_camera.position().x << ", " << g_camera.position().y << ", " << g_camera.position().z << ")" << std::endl;
+
+  // temp (0, 0, 1) for starting position
+  // g_camera.set_pose(glm::vec3(0.f), g_camera.position(), glm::vec3(0.f, 1.f, 0.f));
+  g_camera.set_pose(glm::vec3(0.f), glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, 1.f, 0.f));
+  glm::quat _q = g_camera.get_rotation();
+  glm::quat testq = glm::angleAxis(glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+  g_camera.set_rotation(testq);
+
+  // glm::quat _q = g_camera.get_rotation();
+  // std::cout << "_q (" << _q.w << ", " <<_q.x << ", " << _q.y << ", " << _q.z << ")" << std::endl;
+
 }
 
 int main(void)
