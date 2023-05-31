@@ -100,7 +100,7 @@ struct Model
 
 Model g_model;
 
-bool updata_mesh_data(Mesh& mesh);
+bool update_mesh_data(Mesh& mesh);
 bool gen_gl_buffers(Mesh& mesh);
 bool set_gl_buffers(Mesh& mesh); 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,7 +232,7 @@ bool init_scene(const std::string& filename)
   if (fin.fail()) 
     return false;
 
-  int count;
+  int count; // read 1
   fin >> count;
   if (count != 1)
   {
@@ -240,7 +240,7 @@ bool init_scene(const std::string& filename)
     return  false;
   }
 
-  std::string name;
+  std::string name; // "models/bunny.ply"
   fin >> name;
   if (!load_model(name))
   { 
@@ -248,11 +248,16 @@ bool init_scene(const std::string& filename)
     return -1;
   }
 
+// model's transformation information
+// --- sacle ---
+// --- translate ---
   fin >> g_model.scale[0] >> g_model.scale[1] >> g_model.scale[2] 
       >> g_model.translate[0] >> g_model.translate[1] >> g_model.translate[2];
 
 
   // Cautions: This program doesn't care of loading camera information from a scene file
+  // read 1 camera
+  // similar value as parameter in glulookat
   fin >> count;
   if (count != 1)
   {
@@ -280,14 +285,91 @@ bool load_model(const std::string& filename)
   aiString name;
 
   // TODO
+  const aiMesh* ai_mesh = scene->mMeshes[0]; // data source
+  
+  Mesh& mesh = g_model.mesh;  // current mesh (destination)
+  // std::vector<glm::vec3>& positions = mesh.positions;
+  std::vector<glm::vec4>& colors = mesh.colors;
+  std::vector<unsigned int>& tv_indices = mesh.tv_indices;
+  
+  mesh.positions.resize(ai_mesh->mNumVertices);
+  memcpy(&mesh.positions[0], &ai_mesh->mVertices[0],
+       sizeof(ai_mesh->mVertices[0]) * ai_mesh->mNumVertices);
+
+  colors.resize(ai_mesh->mNumVertices);
+  memcpy(&colors[0], &ai_mesh->mColors[0][0],
+       sizeof(ai_mesh->mColors[0][0]) * ai_mesh->mNumVertices);
+
+  tv_indices.clear();
+  for (unsigned int i = 0; i < ai_mesh->mNumFaces; ++i)
+  {
+    aiFace &ai_face = ai_mesh->mFaces[i];
+    for (unsigned int idx = 0; idx < ai_face.mNumIndices - 2; ++idx)
+    {
+      tv_indices.push_back(ai_face.mIndices[0]);
+      tv_indices.push_back(ai_face.mIndices[idx+1]);
+      tv_indices.push_back(ai_face.mIndices[idx+2]);
+    }
+  }
+
+  update_mesh_data(mesh);
+
+  gen_gl_buffers(mesh);
+  set_gl_buffers(mesh);
+
+  // for (unsigned int i = 0; i < ai_mesh->mNumVertices; ++i)
+  // {
+  //   // glm::vec3 != aiVector3D
+  //   mesh.positions[i] = ai_mesh->mVertices[i];
+  // }
+
+  // for (unsigned int i = 0; i < scene->mNumMeshes; i++)
+  // {
+    
+  // }
 
   return true;
 }
 
 
-bool updata_mesh_data(Mesh& mesh)
+bool update_mesh_data(Mesh& mesh)
 {
   // TODO
+  std::vector<glm::vec3>&      positions = mesh.positions;      // per-vertex 3D positions (raw data)
+  std::vector<glm::vec4>&      colors = mesh.colors;         // per-vertex rgba colors (raw data)
+  std::vector<unsigned int>&   tv_indices = mesh.tv_indices;     // size = 3 x #triangles
+
+  // position and colors for triangle-vertices
+  std::vector<glm::vec3>&      tv_positions = mesh.tv_positions;   // per triangle-vertex 3D position (size = 3 x #triangles)
+  std::vector<glm::vec4>&      tv_colors = mesh.tv_colors;      // per triangle-vertex rgba (size = 3 x #triangles)
+
+  // init tv_positions and tv_colors
+  tv_positions.resize(tv_indices.size());
+  tv_colors.resize(tv_indices.size());
+
+  // converting data to triangle soup
+  for (std::size_t i = 0; i < tv_indices.size(); i+=3)
+  {
+    // unsigned int idx_0 = tv_indices[i];
+    // unsigned int idx_1 = tv_indices[i+1];
+    // unsigned int idx_2 = tv_indices[i+2];
+
+    // tv_positions.push_back(positions[idx_0]);
+    // tv_positions.push_back(positions[idx_1]);
+    // tv_positions.push_back(positions[idx_2]);
+
+    // tv_colors.push_back(colors[idx_0]);
+    // tv_colors.push_back(colors[idx_1]);
+    // tv_colors.push_back(colors[idx_2]);
+
+    tv_positions[i]   = positions[tv_indices[i]];
+    tv_positions[i+1] = positions[tv_indices[i+1]];
+    tv_positions[i+2] = positions[tv_indices[i+2]];
+
+    tv_colors[i]   = colors[tv_indices[i]];
+    tv_colors[i+1] = colors[tv_indices[i+1]];
+    tv_colors[i+2] = colors[tv_indices[i+2]];
+  }
 
   return  true;
 }
@@ -295,6 +377,8 @@ bool updata_mesh_data(Mesh& mesh)
 bool gen_gl_buffers(Mesh& mesh)
 {
   // TODO
+  glGenBuffers(1, &mesh.position_buffer);
+  glGenBuffers(1, &mesh.color_buffer);
 
   return  true;
 }
@@ -302,6 +386,14 @@ bool gen_gl_buffers(Mesh& mesh)
 bool set_gl_buffers(Mesh& mesh)
 {
   // TODO
+  std::vector<glm::vec3>&     tv_positions = mesh.tv_positions;   // per triangle-vertex 3D position (size = 3 x #triangles)
+  std::vector<glm::vec4>&     tv_colors = mesh.tv_colors;      // per triangle-vertex rgba (size = 3 x #triangles)
+
+  glBindBuffer(GL_ARRAY_BUFFER, mesh.position_buffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * tv_positions.size(), &tv_positions[0], GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ARRAY_BUFFER, mesh.color_buffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * tv_colors.size(), &tv_colors[0], GL_STATIC_DRAW);
 
   return  true;
 }
@@ -475,6 +567,19 @@ void render_object()
 void draw_mesh(Mesh& mesh)
 {
   // TODO
+  glBindBuffer(GL_ARRAY_BUFFER, mesh.position_buffer);
+  glEnableVertexAttribArray(loc_a_position);
+  glVertexAttribPointer(loc_a_position, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+  // TODO : bind color buffer
+  glBindBuffer(GL_ARRAY_BUFFER, mesh.color_buffer); 
+  glEnableVertexAttribArray(loc_a_color);
+  glVertexAttribPointer(loc_a_color, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+  glDrawArrays(GL_TRIANGLES, 0, (GLsizei) mesh.tv_positions.size());
+  
+  glDisableVertexAttribArray(loc_a_position);
+  glDisableVertexAttribArray(loc_a_color);
 }
 
 

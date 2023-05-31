@@ -377,6 +377,9 @@ bool set_gl_buffers(Mesh& mesh)
   glBindBuffer(GL_ARRAY_BUFFER, mesh.color_buffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4)*tv_colors.size(), &tv_colors[0], GL_STATIC_DRAW);
 
+  std::cout << "tv_positions: " << tv_positions.size() << std::endl;
+  std::cout << "tv_colors: " << tv_colors.size() << std::endl;
+
   return  true;
 }
 
