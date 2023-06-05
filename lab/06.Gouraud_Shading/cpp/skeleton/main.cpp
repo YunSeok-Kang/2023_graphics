@@ -52,6 +52,20 @@ GLint   loc_a_normal;     // attribute 변수 a_normal 위치
 GLint   loc_u_PVM;        // uniform 변수 u_PVM 위치
 
 // TODO: GPU 쪽 uniform/attribute 변수의 위치를 받아놓을 GLint 타입의 변수 선언 
+GLint   loc_u_model_matrix;
+GLint   loc_u_normal_matrix;
+
+GLint   loc_u_camera_position;
+GLint   loc_u_light_position;
+
+GLint   loc_u_light_ambient;
+GLint   loc_u_light_diffuse;
+GLint   loc_u_light_specular;
+
+GLint   loc_u_obj_ambient;
+GLint   loc_u_obj_diffuse;
+GLint   loc_u_obj_specular;
+GLint   loc_u_obj_shininess;
 
 
 GLuint create_shader_from_file(const std::string& filename, GLuint shader_type);
@@ -529,7 +543,9 @@ void init_shader_program()
   loc_u_PVM = glGetUniformLocation(program, "u_PVM");
 
   loc_a_position = glGetAttribLocation(program, "a_position");
-  loc_a_color = glGetAttribLocation(program, "a_color");
+  // loc_a_color = glGetAttribLocation(program, "a_color");
+
+  
 
   // TODO: get uniform/attribute locations
   // phong reflection model
